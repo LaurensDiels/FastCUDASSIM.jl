@@ -2,7 +2,6 @@
 
 [![Build Status](https://github.com/LaurensDiels/FastCUDASSIM.jl/actions/workflows/CI.yml/badge.svg?branch=master)](https://github.com/LaurensDiels/FastCUDASSIM.jl/actions/workflows/CI.yml?query=branch%3Amain)
 
-**Docs:**
 [![](https://img.shields.io/badge/docs-dev-blue.svg)](https://laurensdiels.github.io/FastCUDASSIM.jl/dev/)
 
 Fast computation of the Structural Similarity Index Measure (SSIM) and its gradients on NVIDIA GPUs.
