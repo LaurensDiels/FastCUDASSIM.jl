@@ -1,0 +1,13 @@
+[deps]
+BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
+CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba"
+FastCUDASSIM = "9bfbc2e6-55ab-4199-a6e3-cd4a60ef255b"
+GPUArrays = "0c68f7d7-f131-5f86-a1c3-88cf8149b2d7"
+ImageCore = "a09fc81d-aa75-5fe9-8630-4744c3626534"
+ImageQualityIndexes = "2996bd0c-7a13-11e9-2da2-2f5ce47296a9"
+SSIMLoss = "99b39245-a385-407d-aa12-a4fa87bc9157"
+Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
+cuDNN = "02a925ec-e4fe-4b08-9a7e-0d78e3d38ccd"
+
+[sources]
+FastCUDASSIM = { path = ".." }

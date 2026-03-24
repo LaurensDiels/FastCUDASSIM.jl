@@ -1,1 +1,5 @@
-/Manifest*.toml
+/.vscode
+/.history
+/docs/build
+/dev
+*Manifest.toml
