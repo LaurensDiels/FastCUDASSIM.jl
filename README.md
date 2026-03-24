@@ -8,7 +8,7 @@ Fast computation of the Structural Similarity Index Measure (SSIM) and its gradi
 
 ## Quick start
 ```julia-repl
-julia> using Pkg; Pkg.add(url="https://github.com/LaurensDiels/FastCUDASSIM.jl")
+julia> using Pkg; Pkg.add(url="https://github.com/LaurensDiels/FastCUDASSIM.jl")  # Not yet registered
 
 julia> using FastCUDASSIM, CUDA
 
@@ -18,7 +18,7 @@ julia> x = CUDA.rand(Float32, nb_channels, height, width, batch_size); y = CUDA.
 
 julia> ssims, gradients = ssim_with_gradient(x, y);
 
-julia> ssims  # The concrete values here depend on RNG
+julia> ssims  # The concrete values here depend on the RNG above
 4-element CuArray{Float32, 1, CUDA.DeviceMemory}:
  0.02415132
  0.029480096
