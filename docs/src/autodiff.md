@@ -1,6 +1,6 @@
 # Automatic differentiation
 
-We include [ChainCoreRules.jl](https://github.com/JuliaDiff/ChainRulesCore.jl) `rrule`s for `ssim` and `dssim` as a package extension. Consequently automatic differentiation using [Zygote.jl](https://github.com/FluxML/Zygote.jl) is supported out of the box. Note that like in [`ssim_gradient`](@ref) we only differentiate with respect to the first image (batch). The same conventions about the input and output format apply.
+We include [ChainRulesCore.jl](https://github.com/JuliaDiff/ChainRulesCore.jl) `rrule`s for `ssim` and `dssim` as a package extension. Consequently automatic differentiation using [Zygote.jl](https://github.com/FluxML/Zygote.jl) is supported out of the box. Note that like in [`ssim_gradient`](@ref) we only differentiate with respect to the first image (batch). The same conventions about the input and output format apply.
 
 An example:
 ```julia-repl

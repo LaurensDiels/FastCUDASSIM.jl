@@ -54,7 +54,7 @@ end
         should_zero = true,
         divide_by_two_in_dssim = true
     )
-    -> (ssims, dL_dimgs1)
+    -> (dssims, dL_dimgs1)
 
 Compute the DSSIMs between two image batches, as well as the gradients with respect to the
 first one.
@@ -178,7 +178,7 @@ end
         divide_by_two_in_dssim = false
     )
 
-Compute the DSSIMs between two image batches, as well as its gradients with respect to the
+Compute the DSSIMs between two image batches, as well as their gradients with respect to the
 first one.
 
 Like [`ssim_with_gradient`](@ref), but for the structural dissimilarity DSSIM = 1 - SSIM

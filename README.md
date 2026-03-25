@@ -1,6 +1,6 @@
 # FastCUDASSIM
 
-[![Build Status](https://github.com/LaurensDiels/FastCUDASSIM.jl/actions/workflows/CI.yml/badge.svg?branch=master)](https://github.com/LaurensDiels/FastCUDASSIM.jl/actions/workflows/CI.yml?query=branch%3Amain)
+[![Build Status](https://github.com/LaurensDiels/FastCUDASSIM.jl/actions/workflows/CI.yml/badge.svg?branch=master)](https://github.com/LaurensDiels/FastCUDASSIM.jl/actions/workflows/CI.yml?query=branch%3Amaster)
 
 [![](https://img.shields.io/badge/docs-dev-blue.svg)](https://laurensdiels.github.io/FastCUDASSIM.jl/dev/)
 
@@ -49,7 +49,7 @@ julia> gradients  # of the ssims w.r.t. the images in x
     * FastCUDASSIM.jl (Zygote):                  1.10  ms
     * FastCUDASSIM.jl (`dssim_with_gradient!`):  0.824 ms
 ```
-on an intel i7-7700K and NVIDIA RTX 3070. The tested implementations are:
+on an Intel i7-7700K and NVIDIA RTX 3070. The tested implementations are:
 * [ImageQualityIndexes.jl](https://github.com/JuliaImages/ImageQualityIndexes.jl)
 * [SSIMLoss.jl](https://github.com/nikopj/SSIMLoss.jl)
 * [pytorch-msssim](https://github.com/VainF/pytorch-msssim)

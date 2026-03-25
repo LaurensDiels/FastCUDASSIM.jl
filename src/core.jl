@@ -75,7 +75,7 @@ const MAX_CONV_U_PX_PER_THREAD = cld(SHMEM_CONV_U_WIDTH * SHMEM_CONV_U_HEIGHT, N
         N_ssims, 
         N_dssims_dQ, N_dssims_dM, N_dssims_dP, 
         imgs1, imgs2,
-        ::Val{nb_channels}, Val{single_image_pair},
+        ::Val{nb_channels}, ::Val{single_image_pair},
         ::Val{use_dynamic_shmem},
         ::Val{skip_ssim}, ::Val{skip_backward}
     ) where {nb_channels, single_image_pair, use_dynamic_shmem, skip_ssim, skip_backward}
@@ -498,7 +498,7 @@ Compute the v-convolution of the u-convolved local image.
     (i.e. after both the u- and now the v-convolution) we are working in.
 - `conv_uv_tile_start_v0`: Similar, but the v-coordinate. 
 - `img_width`: The number of pixels along the image's horizontal direction (`size(⋅, 3)`).
-- `img_height`: The number of pixels along the image's horizontal direction (`size(⋅, 2)`). 
+- `img_height`: The number of pixels along the image's vertical direction (`size(⋅, 2)`). 
 - `nb_channels`: The number of color channels in the image (`size(⋅, 1)`), but statically
     known.
 - `order_function`: A function taking in a `CartesianIndex` in channel, height, width
@@ -508,7 +508,7 @@ Compute the v-convolution of the u-convolved local image.
 
 # Return
 Since every thread might work on multiple pixels ($MAX_PX_PER_THREAD_I64 for our choice
-of (`const`) settings) and every channel might have multiple channels, we return an 
+of (`const`) settings) and every pixel might have multiple channels, we return an 
 `SMatrix{nb_channels, $MAX_PX_PER_THREAD_I64}` of the convolution outputs our thread
 computed.
 """
@@ -855,8 +855,8 @@ Allocated buffers will be freed, while allocated outputs will be returned.
 - `ssims`: The (output) `CuVector` of `length` the batch size, containing the (D)SSIM
     values.
 - `dL_dimgs1`: The (output) gradient of `imgs1` with respect to the (D)SSIM value L. It uses
-    the same normalised floating point format in channels x height x width x batch size
-    memory order as `imgs1`. If not explicitly in this format, we will attemp to convert to
+    the same normalised floating point format in `channels x height x width x batch size`
+    memory order as `imgs1`. If not explicitly in this format, we will attempt to convert to
     it using [`_canonicalize_image`](@ref).
 - `imgs1`: The first images batch in the aforementioned format. Also here, we will use
     `_canonicalize_image` in order to be able to handle e.g. a `CuMatrix{RGB{Float32}}`,
@@ -874,7 +874,7 @@ Allocated buffers will be freed, while allocated outputs will be returned.
 - `N_dssims_dM`: Idem.
 - `N_dssims_dP`: Idem.
 - `should_zero`: To get the correct (D)SSIM value we need `ssims` to start with values of
-    `0`. When set to `true`` we will perform this zeroing inside the method. Otherwise it is
+    `0`. When set to `true` we will perform this zeroing inside the method. Otherwise it is
     the responsibility of the caller to have done this in advance.
     Only relevant when `!skip_ssim`.
 - `skip_ssim`: Whether to actually compute and store the (D)SSIM values in `ssims`.
@@ -1011,7 +1011,7 @@ function _ssim_fwd_bwd!(
              SHMEM_CONV_U_HEIGHT * SHMEM_CONV_U_WIDTH * sizeof(Tc_bwd))
         # shmem_N_dL_dX and shmem_conv_u
 
-        if shmem_bytes < max_static_shared_memory
+        if shmem_bytes <= max_static_shared_memory
             @cuda threads=NB_THREADS blocks=nb_blocks _ssim_kernel_bwd!(
                 dL_dcimgs1, 
                 N_dssims_dXs...,
