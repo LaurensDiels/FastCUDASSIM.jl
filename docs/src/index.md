@@ -21,12 +21,12 @@ julia> ssim_gradient(img1, img2)  # w.r.t. img1
  -4.05717f-11 ...
  ...          ...
 
-julia> using Zygote
+julia> Pkg.add("Zygote"); using Zygote
 
 julia> Zygote.gradient(x -> ssim(x, img2), img1)
 (Float32[-4.057169f-11 ...],)
 
-julia> using TestImages
+julia> Pkg.add("TestImages"); using TestImages
 
 julia> dssim(cu(testimage("cameraman.tif")), cu(testimage("mandril_gray.tif")))  # CuMatrix{Gray{N0f8}} inputs
 0.8373802f0
