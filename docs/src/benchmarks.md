@@ -28,7 +28,7 @@ In these benchmarks we used
 * CUDA 5.9.7 (runtime 13.1, driver 591.59.0, compiler 13.2)
 * ImageQualityIndexes 0.3.7
 * SSIMLoss 1.0.0
-* FastCUDASSIM 1.0.0-DEV
+* FastCUDASSIM 0.1.0
 * Python 3.10.20
 * PyTorch 2.7.1+cu118
 * pytorch_msssim 1.0.0 (latest commit: b057b07, August 16, 2023)

@@ -6,9 +6,9 @@ Fast calculation of the Structural Similarity Index Measure (SSIM) and its gradi
 ## Quick start
 
 ```julia-repl
-julia> using Pkg; Pkg.add("CUDA"); Pkg.add(url = "https://github.com/LaurensDiels/FastCUDASSIM.jl")  # Currently not yet registered
+julia> using Pkg; Pkg.add(["CUDA", "FastCUDASSIM"])
 
-julia> using FastCUDASSIM, CUDA
+julia> using CUDA, FastCUDASSIM
 
 julia> img1 = CUDA.rand(Float32, 3, 512, 768); img2 = similar(img1);
 

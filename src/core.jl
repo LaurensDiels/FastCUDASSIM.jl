@@ -17,8 +17,8 @@ const C2 = 0.03f0 ^ 2
 # Each image in an image batch is handled separately, reusing internal buffers (like shared
 # memory). We split each image into non-overlapping tiles. Each tile is handled by a single
 # block, but blocks might handle multiple (strided) tiles.
-const TILE_WIDTH = 8i32     # i.e. block width
-const TILE_HEIGHT = 32i32   # i.e. block height
+const TILE_WIDTH = 8i32
+const TILE_HEIGHT = 32i32
 # Obtained by testing many configurations on an RTX 3070.
 # Also fits comfortably into standard shared memory (48 KiB) for RGB images.
 

@@ -1,6 +1,6 @@
 name = "FastCUDASSIM"
 uuid = "9bfbc2e6-55ab-4199-a6e3-cd4a60ef255b"
-version = "1.0.0-DEV"
+version = "0.1.0"
 authors = ["Laurens Diels"]
 
 [deps]

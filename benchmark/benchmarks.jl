@@ -119,7 +119,7 @@ CUDA.reclaim()
 println("  FastCUDASSIM (direct, in-place):")
 dssims = CuArray{Float32}(undef, b)
 dL_dimgs1 = similar(imgs1_fcs)
-N_dssims_dQ = similar(dL_dimgs1)
+N_dssims_dQ = CuArray{Float32}(undef, h, c, w, b)
 N_dssims_dM = similar(N_dssims_dQ)
 N_dssims_dP = similar(N_dssims_dQ)
 @benchmark(
