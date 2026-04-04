@@ -1,10 +1,9 @@
 # FastCUDASSIM
 
-[![Build Status](https://github.com/LaurensDiels/FastCUDASSIM.jl/actions/workflows/CI.yml/badge.svg?branch=master)](https://github.com/LaurensDiels/FastCUDASSIM.jl/actions/workflows/CI.yml?query=branch%3Amaster)
+[![Build Status](https://github.com/LaurensDiels/FastCUDASSIM.jl/actions/workflows/CI.yml/badge.svg?branch=master)](https://github.com/LaurensDiels/FastCUDASSIM.jl/actions/workflows/CI.yml?query=branch%3Amaster)[![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://laurensdiels.github.io/FastCUDASSIM.jl/stable/)[![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://laurensdiels.github.io/FastCUDASSIM.jl/dev/)
 
-[![](https://img.shields.io/badge/docs-dev-blue.svg)](https://laurensdiels.github.io/FastCUDASSIM.jl/dev/)
 
-Fast computation of the Structural Similarity Index Measure (SSIM) and its gradients on NVIDIA GPUs.
+Fast computation of the [Structural Similarity Index Measure](https://en.wikipedia.org/wiki/Structural_similarity_index_measure) (SSIM) and its gradients on NVIDIA GPUs.
 
 ## Quick start
 ```julia-repl
