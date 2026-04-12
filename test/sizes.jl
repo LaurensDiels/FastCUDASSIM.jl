@@ -69,13 +69,11 @@
     # In-place test
     ssims = CUDA.zeros(1)
     dL_dimg1_cn = similar(img1_cn)
-    N_dssims_dQ_nn = CuArray{Float32}(undef, h, w)
-    N_dssims_dM_cn = CuArray{Float32}(undef, h, 1, w)
-    N_dssims_dP_cb = CuArray{Float32}(undef, h, 1, w, 1)
+    N_dssims_dQMP_nn = CuArray{Float32}(undef, h, 3, w)
     s_ip, g_ip = ssim_with_gradient!(
         ssims, dL_dimg1_cn,
-        img1_nn, img2_cn,
-        N_dssims_dQ_nn, N_dssims_dM_cn, N_dssims_dP_cb)
+        img1_nn, img2_cb,
+        N_dssims_dQMP_nn)
     # Test that this does not error (despite the total inconsistency of the formats)
 
     @test ssims == s_ip ≈ s_cb          # In particular, s_ip is not scalar

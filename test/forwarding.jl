@@ -12,7 +12,7 @@
 
     ssims = CUDA.zeros(b)
     dL_dimgs1 = similar(imgs1)
-    ssim_with_gradient!(ssims, dL_dimgs1, imgs1, imgs2, nothing, nothing, nothing, false)
+    ssim_with_gradient!(ssims, dL_dimgs1, imgs1, imgs2, nothing, false)
 
     @test ssims ≈ ssim(imgs1, imgs2)
     @test dL_dimgs1 ≈ ssim_gradient(imgs1, imgs2)
@@ -24,6 +24,6 @@
     @test ssims ≈ ssims_b
 
     dL_dimgs1_b = similar(dL_dimgs1)
-    ssim_gradient!(dL_dimgs1_b, imgs1, imgs2, nothing, nothing, nothing)
+    ssim_gradient!(dL_dimgs1_b, imgs1, imgs2, nothing)
     @test dL_dimgs1 ≈ dL_dimgs1_b
 end

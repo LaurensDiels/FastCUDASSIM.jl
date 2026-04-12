@@ -27,17 +27,15 @@ Although less convenient and flexible, when possible consider using the in-place
 ```julia-repl
 julia> render_batch = CUDA.rand(Float32, 3, 32, 48, 128)  # Batch of 128 3-channel images of height 32 and width 48 pixels
 
-julia> ground_truth_batch = similar(render_batch);
+julia> ground_truth_batch = CUDA.rand(Float32, size(render_batch));
 
 julia> dL_render_batch = similar(render_batch);
-       dssims = CuArray{Float32}(undef, 128);             # batch size
-       N_dssims_dQ = CUDA.rand(Float32, 32, 3, 48, 128);  # height x channels x width x batch size
-       N_dssims_dM = similar(N_dssims_dQ);
-       N_dssims_dP = similar(N_dssims_dQ);
+       dssims = CuArray{Float32}(undef, 128);                       # batch size
+       N_dssims_dQMP = CuArray{Float32}(undef, 32, 3, 3, 48, 128);  # height x 3 x channels x width x batch size
 
-julia> dssim_with_gradient!(dssims, dL_render_batch, render_batch, ground_truth_batch, N_dssims_dQ, N_dssims_dM, N_dssims_dP);
+julia> dssim_with_gradient!(dssims, dL_render_batch, render_batch, ground_truth_batch, N_dssims_dQMP);
 
 julia> # (...): Use dL_render_batch to update the parameters of the model outputting render_batch (in-place)
 
-julia> dssim_with_gradient!(dssims, dL_render_batch, render_batch, ground_truth_batch, N_dssims_dQ, N_dssims_dM, N_dssims_dP);
+julia> dssim_with_gradient!(dssims, dL_render_batch, render_batch, ground_truth_batch, N_dssims_dQMP);
 ```

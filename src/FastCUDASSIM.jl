@@ -8,7 +8,7 @@ julia> using FastCUDASSIM, CUDA
 
 julia> img1 = CUDA.rand(Float32, 3, 512, 768); img2 = similar(img1);
 
-julia> ssim(img1, img2)  # Actual value depends on RNG above
+julia> ssim(img1, img2)  # Actual value depends on the RNG above
 4.7778763f-6
 ```
 
@@ -19,9 +19,9 @@ julia> ssim(img1, img2)  # Actual value depends on RNG above
   `Float32`.
 * We expect Float-like image intensities in [0, 1]. This includes `N0f8`.
 * Internally we use `channels x height x width x batch size` format for the input image
-  batches, and `height x channels x width x batch size` for internal buffers (`N_dssims_dQ`
-  and friends). Supplied inputs need not have this explicit `size`, but must have an
-  equivalent memory layout.
+  batches, and `height x $(FastCUDASSIM.NB_BWD_CONVS_I64) x channels x width x batch size`
+  for the internal gradients buffers `N_dssims_dQMP`. Supplied inputs need not have this
+  explicit `size`, but must have an equivalent memory layout.
 
 # Image formats
 * To expand on the last point, consider a `CuMatrix{RGB{N0f8}}` of size `(256, 384)`. It is
@@ -51,7 +51,6 @@ using CUDA: i32
 using GPUArrays: @allowscalar, unsafe_free!
 
 using StaticArrays
-using Accessors
 
 using ImageCore
 

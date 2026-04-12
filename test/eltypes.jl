@@ -29,7 +29,7 @@
     dssim_gradient!(
         dL_dimg_mandrill, 
         img_mandrill_Float32, img_airplane_Float32, 
-        nothing, nothing, nothing
+        nothing
     )  # The first test is that this does not error
     @test maximum(abs.(
         dL_dimg_mandrill .- dssim_gradient(img_mandrill_Float32, img_airplane_Float32))

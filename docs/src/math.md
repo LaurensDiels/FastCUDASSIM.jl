@@ -17,7 +17,7 @@ $$\matr{S}(\matr{I}, \matr{R}) = \frac{(2 \matr{M}_{\matr{I}} \odot \matr{M}_{\m
 Here all operations are elementwise, and $\alpha$ and $\beta$ are two small constants to avoid numerical instability by division by (near) zero. If the intensities are normalised to lie in $[0, 1]$, we will use $\alpha = 0.01^2$ and $\beta = 0.03^2$, following standard practices. The actual SSIM is then simply the mean of the SSIM map. If our images have multiple color channels, we take the average of the per-channel SSIM values.
 
 ### In the code
-We always work with batches of images with one or more color channels. Because the batch axis is the last one, the separate images are contiguous in memory, so we can simply loop over them. Therefore, we will only consider a single image pair from now on. The channel axis is the first one, so we cannot do the same for the color channels. Instead we will always process all channels of a pixel at the same time. Because the operations are the same for each channel and we simply average in the end, we will again only consider grayscale images.
+We always work with batches of images with one or more color channels. Because the batch axis is the last one, the separate images are contiguous in memory, so we can simply loop over them. Therefore, we will only consider a single image pair from now on. The channel axis is the first one, so the situation is more complicated here. But for the forward pass we found that also simply looping over the channels axis using another outer loop is faster than using an inner-most loop, at least when the number of channels is small (e.g. 3). Hence, we will again only consider grayscale images.
 
 We will exploit that the kernel $\matr{K}$ is separable, so that we can replace a 2D convolution with $\matr{K}$ by two 1D convolutions, one horizontal and one vertical. This (single) 1D kernel $\vect{k} \in \mathbb{R}^{2r + 1}$ satisfies
 
@@ -106,6 +106,8 @@ For color images not much changes as we deal with the channels separately. Inste
 
 ### In the code
 In the forward pass we already compute and save $\frac{\partial L}{\partial \matr{Q}}$, $\frac{\partial L}{\partial \matr{M}}$ and $\frac{\partial L}{\partial \matr{P}}$. (Note that if we are only interested in the gradient and not the SSIM value itself, we do not even have to perform the reduction on the implicit local memory SSIM map $\matr{S}$.) The backward pass then only corresponds to computing and combining the cross-correlations of these matrices with $\matr{K}$. We will use separate kernels for the forward and backward pass, and really store $\frac{\partial L}{\partial \matr{M}}$ and friends in global memory. The alternative where we keep everything in shared memory would require working with overlapping tiles of $(H + 4r) \times (W + 4r)$ pixels to eventually produce after two 2D cross-correlations a gradient block of $H \times W$. The amount of redundant computations outweights the benefit of not going to global memory.
+
+For the backward pass we still handle the batch axis via an outer loop, but we found it to be more efficient to loop over the channels axis via inner loops. Note that in the forward pass we were only reading from `CuArray`s in `channels x height x width x batch_size` order, but now we also need to write to one. (For the internal gradients $\frac{\partial L}{\partial \matr{Q}}$ and friends we have full control of the memory order, so we simply do not put the channels first, circumventing the problem entirely.)
 
 
 ### A note on padding

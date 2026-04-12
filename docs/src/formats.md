@@ -45,52 +45,51 @@ julia> ssim_gradient(reshape(img1, 1, size(img1)..., 1), reshape(img2, 1, size(i
  9.98839f-6 ...
  ...        ...
 ```
-In all these examples the `size` of the returned gradient is the same as that of the first input argument. While we advise against it, it is possible to use different formats for the two input images, as they will be canonicalized seperately. But for the output format we solely rely on the first image.
+In all these examples the `size` of the returned gradient is the same as that of the first input argument. While we advise against it, it is possible to use different formats for the two input images, as they will be canonicalized seperately. For the output format we solely rely on the first image.
 ```julia-repl
 julia> ssim_gradient(reshape(img1, 1, size(img1)..., 1), img2)
 1×256×384×1 CuArray{Float32, 4, CUDA.DeviceMemory}:
 ...
 ```
 
-Making the output similar to the input includes matching `Colorant`s if relevant:
+Making the output similar to the input includes matching `Colorant`s, if relevant:
 ```julia-repl
-julia> img1 = CUDA.rand(RGB{Float32}, 256, 384); img2 = CUDA.rand(RGB{Float32}, 256, 384);
+julia> img1 = CUDA.rand(RGB{Float32}, 256, 384, 1); img2 = CUDA.rand(RGB{Float32}, 256, 384, 1);
 
 julia> ssim_gradient(img1, img2)
-256×384 CuArray{RGB{Float32}, 2, CUDA.DeviceMemory}:
- RGB(3.75159f-6, -3.50066f-6, -3.8947f-6) ...
+256×384×1 CuArray{RGB{Float32}, 3, CUDA.DeviceMemory}:
+[:, :, 1] =
+ RGB(5.14282f-6, 9.09983f-6, 4.99638f-6)  ...
  ...                                      ...
 ```
 
-For the in-place methods we will again perform `size` conversions automatically, whenever reasonably possible. An important remark here is that the internal buffers `N_dssims_dQ` and friends use canonical `height x channels x width x batch size` memory order (for memory coalescing). Therefore, they cannot be provided as e.g. a `CuMatrix{RGB{Float32}}` as this uses `channels x height x width` order. We also do not allow `Gray` inputs here. Additionally, in e.g. [`ssim!`](@ref) we always expect a `CuVector` of `length` the (possibly implicit) batch size, never a scalar.
+For the in-place methods we will again perform `size` conversions automatically, whenever reasonably possible. An important remark here is that the internal gradients buffer `N_dssims_dQMP` uses canonical `height x 3 x channels x width x batch size` memory order (for memory coalescing). We will still automatically add the singleton channel and batch axes when necessary, but now `Colorant` `eltype`s are not supported. Additionally, in e.g. [`ssim!`](@ref) we always expect a `CuVector` of `length` the (possibly implicit) batch size, never a scalar.
 
 The following example is purely illustrative. Again, to avoid confusion we advise to use as consistent input formats as possible.
 ```julia-repl
 julia> img1 = CUDA.rand(256, 384); img2 = CUDA.rand(1, 256, 384, 1);  # Both (1, 256, 384, 1) in canonical format
 
-julia> ssim_vector = CuArray{Float32}(undef, 1)               # Must be a CuVector
+julia> ssim_vector = CuArray{Float32}(undef, 1);              # Must be a CuVector
        dL_dimg1 = CuArray{Float32}(undef, 1, 256, 384);       # Will be converted to canonical size (1, 256, 384, 1)
-       N_dssim_dQ = CuArray{Float32}(undef, 256, 384);        #                                     (256, 1, 384, 1)
-       N_dssim_dM = CuArray{Float32}(undef, 256, 1, 384);     #                                     (256, 1, 384, 1)
-       N_dssim_dP = CuArray{Float32}(undef, 256, 1, 384, 1);  # Already in canonical format
+       N_dssim_dQMP = CuArray{Float32}(undef, 256, 3, 384);   #                                     (256, 3, 1, 384, 1)
     
-julia> CUDA.@sync ssim_with_gradient!(ssim_vector, dL_dimg1, img1, img2, N_dssim_dQ, N_dssim_dM, N_dssim_dP)  # Returns ssim_vector and dL_dimg1 (in their input format)
-(Float32[0.019175043], Float32[-1.0864862f-5 ...;;; ...])
+julia> CUDA.@sync ssim_with_gradient!(ssim_vector, dL_dimg1, img1, img2, N_dssim_dQMP)  # Returns ssim_vector and dL_dimg1 (in their input format)
+(Float32[0.01444148], Float32[2.195323f-5 ... ;;; ...])
 ```
 
 ## `eltype`s
 Our Gaussian SSIM kernel is hard-coded as `Float32`. When it is used in the convolutions, the output will be of the promotion type of the `eltype` of the input image with `Float32`. When an allocating method is used, we will then use the promotion type of both images' `eltype`s and `Float32` for the output. For example,
 ```julia-repl
-julia> img1 = CUDA.rand(Float16, 32, 48); img2 = similar(img1);
+julia> img1 = CUDA.rand(Float16, 24, 32); img2 = CUDA.rand(Float16, size(img1));
 
 julia> ssim(img1, img2)
-5.400778f-6
+0.09606406f0
 
 julia> promote_type(eltype(img1), eltype(img2), Float32)
 Float32
 
 julia> ssim(img1, Float64.(img2))
-5.400778328318361e-6
+0.09606405144438597
 
 julia> promote_type(eltype(img1), Float64, Float32)
 Float64
@@ -98,7 +97,7 @@ Float64
 For `N0f8` and `N0f16` the promotion type is also `Float32`.
 ```julia-repl
 julia> ssim_with_gradient(cu(N0f16.(Array(img1))), cu(Gray{N0f8}.(Array(img2))))
-(5.40085f-6, Float32[-3.435738f-8 ...])
+(0.096031874f0, Float32[-0.00219706 ...])
 ```
 In this example we first of all point out that the `CuMatrix{Gray{N0f8}}` is internally converted to a `CuArray{N0f8, 4}`, where we added the singleton gray color channel and batch axes. Then for the output we have `promote_type(N0f16, N0f8, Float32) === Float32`. Secondly, we need to pass through the CPU to construct the `Normed` inputs. The reason for this is that the `Normed` constructor has a check possibly throwing an error with a string-interpolated message. This is not supported on the device.
 
@@ -106,19 +105,20 @@ For in-place methods the convolutions will still take place as described before,
 ```julia-repl
 julia> CUDA.@sync ssim!(CUDA.zeros(Float16, 1), img1, img2, false)
 1-element CuArray{Float16, 1, CUDA.DeviceMemory}:
- 5.4e-6
+ 0.0962
 ```
 Of course, we would advise against using too low a precision. We primarily wrote the code with `Float32` in mind and do not guarantee sufficient numerical stabitility for lower precision.
 
+
 ## `nothing`
-Finally, we mention that for in-place methods like [`ssim_with_gradient!`](@ref) you can use `nothing` for one of the outputs or for the intermediate gradient buffers. In this case we will internally allocate the required arrays with appropriate `eltype`s (the same ones as would be used for the allocating methods like [`ssim_with_gradient`](@ref)). Buffers provided as `nothing` will be automatically `unsafe_free!`d. The same is true for the singleton `ssims` `CuVector` if we do not return it, but its only scalar value.
+Finally, we mention that for in-place methods like [`ssim_with_gradient!`](@ref) you can use `nothing` for one of the outputs or for the intermediate gradients buffer. In this case we will internally allocate the required arrays with appropriate `eltype`s (the same ones as would be used for the allocating methods like [`ssim_with_gradient`](@ref)). Buffers provided as `nothing` will be automatically `unsafe_free!`d. The same is true for the singleton `ssims` `CuVector` if we do not return it, but its only scalar value.
 ```julia-repl
-julia> img1 = CUDA.rand(Float32, 32, 48); img2 = similar(img1); dL_dimg1 = similar(img1)
+julia> img1 = CUDA.rand(Float32, 32, 48); img2 = CUDA.rand(Float32, size(img1)); dL_dimg1 = similar(img1);
 
-julia> CUDA.@sync ssim_with_gradient!(nothing, dL_dimg1, img1, img2, nothing, nothing, nothing)
-(5.8797564f-6, Float32[-2.607109f-8 ...])
+julia> CUDA.@sync ssim_with_gradient!(nothing, dL_dimg1, img1, img2, nothing)
+(0.071204804f0, Float32[0.0012562195 ...])
 
-julia> CUDA.@sync ssim_with_gradient!(nothing, dL_dimg1, reshape(img1, (1, size(img1)..., 1)), img2, nothing, nothing, nothing)
-(Float32[5.8797564f-6], Float32[-2.607109f-8 ...])
+julia> CUDA.@sync ssim_with_gradient!(nothing, dL_dimg1, reshape(img1, (1, size(img1)..., 1)), img2, nothing)
+(Float32[0.071204804], Float32[0.0012562195 ...])
 ```
 In both cases we internally allocate a singleton `CuVector` for the single SSIM value. In the first case we extract its value and free the `CuVector`, while in the second case we return (and obviously do not free) the `CuVector`.

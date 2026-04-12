@@ -39,19 +39,22 @@ _canonicalize_image(img::AbstractArray{<:Colorant{<:Any, 1}, 3}) =
 """
     _canonicalize_gradient_buffer(N_dssims_dX)
 
-Like [`_canonicalize_image`](@ref), but for the height x channels x width x batch size
-format used in the gradient buffers `N_dssims_dQ`, `N_dssims_dM` and `N_dssims_dP`.
+Like [`_canonicalize_image`](@ref), but for the
+`height x $NB_BWD_CONVS_I64 x channels x width x batch size`` format used in the gradients
+buffer `N_dssims_dQMP`.
 """
 function _canonicalize_gradient_buffer end
 
 _canonicalize_gradient_buffer(gb) = gb
+_canonicalize_gradient_buffer(gb::AbstractArray{<:Any, 4}) = 
+    _canonicalize_gradient_buffer(reshape(gb, size(gb)..., 1))
+# h x 3 x c x w -> h x 3 x c x w x 1
 _canonicalize_gradient_buffer(gb::AbstractArray{<:Any, 3}) = 
-    _canonicalize_gradient_buffer(reshape(gb, size(gb)..., 1))  # h x c x w -> h x c x w x 1
-_canonicalize_gradient_buffer(gb::AbstractMatrix) = 
-    _canonicalize_gradient_buffer(reshape(gb, size(gb, 1), 1, size(gb, 2)))  
-# h x w -> h x 1 x w -> h x 1 x w x 1
+    _canonicalize_gradient_buffer(reshape(gb, size(gb, 1), size(gb, 2), 1, size(gb, 3)))  
+# h x 3 x w -> h x 3 x 1 x w -> h x 3 x 1 x w x 1
 
-# No support for e.g. CuMatrix{RGB}, as this is 3 x h x w, not h x 3 x w
+# No support for e.g. CuArray{RGB, 3} of size (3, h, w), as this is c x 3 x h x w,
+# not h x 3 x c x w
 
 
 """

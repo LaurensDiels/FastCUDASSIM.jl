@@ -6,29 +6,29 @@ We should point out that fused\_ssim.py uses zero-padding like us, while SSIMLos
 
 The benchmarking code can be found under `benchmark` in the GitHub repo. The results on a system equipped with an intel i7-7700K CPU and RTX 3070 GPU are shown below. We always present the median execution time. 
 
-* SSIM for a single full HD RGB image pair:
+* SSIM for a single full HD image pair (1 | 3 channels):
 ```
-    * ImageQualityIndexes.jl:                 638     ms
-    * SSIMLoss.jl (`crop = false`):            60.3   ms
-    * pytorch_msssim.py:                        8.35  ms
-    * fused_ssim.py:                            0.875 ms
-    * FastCUDASSIM.jl:                          0.988 ms
+    * ImageQualityIndexes.jl:                 234     ms  |  546     ms
+    * SSIMLoss.jl (`crop = false`):            19.9   ms  |   58.1   ms
+    * pytorch_msssim.py:                        4.16  ms  |    8.27  ms
+    * fused_ssim.py:                            0.269 ms  |    0.891 ms
+    * FastCUDASSIM.jl:                          0.284 ms  |    0.831 ms
 ```
-* DSSIMs and gradients for a batch of 32 grayscale images of size 256 x 256:
+* DSSIMs and gradients for a batch of 32 images of size 256 x 256 (1 | 3 channels):
 ```
     * SSIMLoss.jl (Zygote):                     ERROR: Gradient Thunk(ChainRules.var"#...) should be a tuple
-    * pytorch_msssim.py:                        12.0   ms
-    * fused_ssim.py:                             0.765 ms
-    * FastCUDASSIM.jl (Zygote):                  1.10  ms
-    * FastCUDASSIM.jl (`dssim_with_gradient!`):  0.824 ms
+    * pytorch_msssim.py:                        11.9   ms  |  15.6   ms
+    * fused_ssim.py:                             0.732 ms  |   1.78  ms
+    * FastCUDASSIM.jl (Zygote):                  0.825 ms  |   2.17  ms
+    * FastCUDASSIM.jl (`dssim_with_gradient!`):  0.642 ms  |   1.74  ms
 ```
 
 In these benchmarks we used
 * Julia 1.12.5
-* CUDA 5.9.7 (runtime 13.1, driver 591.59.0, compiler 13.2)
+* CUDA 5.9.7 (runtime 13.1, driver 591.86.0, compiler 13.2)
 * ImageQualityIndexes 0.3.7
 * SSIMLoss 1.0.0
-* FastCUDASSIM 0.1.0
+* FastCUDASSIM 0.2.0
 * Python 3.10.20
 * PyTorch 2.7.1+cu118
 * pytorch_msssim 1.0.0 (latest commit: b057b07, August 16, 2023)

@@ -4,7 +4,7 @@
     ssim_with_gradient!(
         ssims, dL_dimgs1, 
         imgs1, imgs2,
-        N_dssims_dQ, N_dssims_dM, N_dssims_dP,
+        N_dssims_dQMP,
         should_zero = true
     )
     -> (ssims, dL_dimgs1)
@@ -19,8 +19,7 @@ See the module documentation for the input and output formats.
 - `dL_dimgs1`: The (output) gradients of `imgs1` with respect to the SSIM value L.
 - `imgs1`: The first image batch, with respect to which we compute the gradients.
 - `imgs2`: The second image batch.
-- `N_dssims_dQ`, `N_dssims_dM` and  `N_dssims_dP`: Internal buffers for intermediate
-    gradients.
+- `N_dssims_dQMP`: Internal buffer for intermediate gradients.
 - `should_zero`: To get the correct SSIM value we need `ssims` to start with values of `0`.
     When set to `true` we will perform this zeroing inside the method. Otherwise it is the
     responsibility of the caller to have done this in advance.
@@ -32,13 +31,13 @@ See the module documentation for the input and output formats.
 function ssim_with_gradient!(
     ssims, dL_dimgs1, 
     imgs1, imgs2,
-    N_dssims_dQ, N_dssims_dM, N_dssims_dP,
+    N_dssims_dQMP,
     should_zero = true
 )
     return _ssim_fwd_bwd!(
         ssims, dL_dimgs1,
         imgs1, imgs2,
-        N_dssims_dQ, N_dssims_dM, N_dssims_dP,
+        N_dssims_dQMP,
         should_zero,
         Val(false), Val(false),
         false, false  # (not used)
@@ -50,7 +49,7 @@ end
     dssim_with_gradient!(
         dssims, dL_dimgs1, 
         imgs1, imgs2,
-        N_dssims_dQ, N_dssims_dM, N_dssims_dP,
+        N_dssims_dQMP,
         should_zero = true,
         divide_by_two_in_dssim = true
     )
@@ -65,14 +64,14 @@ when `!divide_by_two_in_dssim` (by default), or DSSIM = (1 - SSIM) / 2.
 function dssim_with_gradient!(
     dssims, dL_dimgs1, 
     imgs1, imgs2,
-    N_dssims_dQ, N_dssims_dM, N_dssims_dP,
+    N_dssims_dQMP,
     should_zero = true,
     divide_by_two_in_dssim = false
 )
     return _ssim_fwd_bwd!(
         dssims, dL_dimgs1,
         imgs1, imgs2,
-        N_dssims_dQ, N_dssims_dM, N_dssims_dP,
+        N_dssims_dQMP,
         should_zero,
         Val(false), Val(false),
         true, divide_by_two_in_dssim
@@ -84,7 +83,7 @@ end
     ssim_gradient!(
         dL_dimgs1, 
         imgs1, imgs2,
-        N_dssims_dQ, N_dssims_dM, N_dssims_dP,
+        N_dssims_dQMP,
     )
     -> dL_dimgs1
 
@@ -95,12 +94,12 @@ Like [`ssim_with_gradient!`](@ref), but without the computation of the SSIM itse
 function ssim_gradient!(
     dL_dimgs1, 
     imgs1, imgs2,
-    N_dssims_dQ, N_dssims_dM, N_dssims_dP,
+    N_dssims_dQMP,
 )
     return _ssim_fwd_bwd!(
         nothing, dL_dimgs1,
         imgs1, imgs2,
-        N_dssims_dQ, N_dssims_dM, N_dssims_dP,
+        N_dssims_dQMP,
         false,  # not used
         Val(true), Val(false),
         false, false
@@ -112,7 +111,7 @@ end
     dssim_gradient!(
         dL_dimgs1, 
         imgs1, imgs2,
-        N_dssims_dQ, N_dssims_dM, N_dssims_dP,
+        N_dssims_dQMP,
         divide_by_two_in_dssim = false
     )
     -> dL_dimgs1
@@ -126,13 +125,13 @@ like [`ssim_gradient!`](@ref), but for the DSSIM = 1 - SSIM when `!divide_by_two
 function dssim_gradient!(
     dL_dimgs1, 
     imgs1, imgs2,
-    N_dssims_dQ, N_dssims_dM, N_dssims_dP,
+    N_dssims_dQMP,
     divide_by_two_in_dssim = false
 )
     return _ssim_fwd_bwd!(
         nothing, dL_dimgs1,
         imgs1, imgs2,
-        N_dssims_dQ, N_dssims_dM, N_dssims_dP,
+        N_dssims_dQMP,
         false,  # not used
         Val(true), Val(false),
         true, divide_by_two_in_dssim
@@ -146,7 +145,7 @@ end
 Compute the SSIMs between two image batches, as well as the gradients with respect to the
 first one.
 
-This method allocates (and frees) a number of buffers and of course also allocates the 
+This method allocates (and frees) an internal buffer and of course also allocates the 
 output gradient 'image' batch. See [`ssim_with_gradient!`](@ref) for the non-allocating
 version.
 
@@ -164,9 +163,9 @@ function ssim_with_gradient(
     imgs1, imgs2,
 )
     return ssim_with_gradient!(
-        nothing, nothing,           # will be allocated and returned
+        nothing, nothing,  # will be allocated and returned
         imgs1, imgs2,
-        nothing, nothing, nothing,  # will be allocated and freed
+        nothing,           # will be allocated and freed
         false
     )
 end
@@ -189,9 +188,9 @@ function dssim_with_gradient(
     imgs1, imgs2, divide_by_two_in_dssim = false
 )
     return dssim_with_gradient!(
-        nothing, nothing,           # will be allocated and returned
+        nothing, nothing,  # will be allocated and returned
         imgs1, imgs2,
-        nothing, nothing, nothing,  # will be allocated and freed
+        nothing,           # will be allocated and freed
         false, divide_by_two_in_dssim
     )
 end
@@ -204,16 +203,16 @@ Compute the gradients of the SSIMs between two image batches with respect to the
 
 Like [`ssim_with_gradient`](@ref), but does not compute the SSIM itself.
 
-This method allocates (and frees) a number of buffers and of course also allocates the 
+This method allocates (and frees) an internal buffer and of course also allocates the 
 output gradient 'image' batch. See [`ssim_gradient!`](@ref) for the non-allocating version.
 """
 function ssim_gradient(
     imgs1, imgs2,
 )
     return ssim_gradient!(
-        nothing,                    # will be allocated and returned
+        nothing,  # will be allocated and returned
         imgs1, imgs2,
-        nothing, nothing, nothing,  # will be allocated and freed
+        nothing,  # will be allocated and freed
     )
 end
 
@@ -230,16 +229,16 @@ Like [`dssim_with_gradient`](@ref), but does not compute the DSSIM itself.
 
 Similar to [`ssim_gradient`](@ref), but for the DSSIM = 1 - SSIM when 
 `!divide_by_two_in_dssim` (the default), or DSSIM = (1 - SSIM) / 2 otherwise.
-This method allocates (and frees) a number of buffers and of course also allocates the 
+This method allocates (and frees) an internal buffer and of course also allocates the 
 output gradient 'image' batch. See [`dssim_gradient!`](@ref) for the non-allocating version.
 """
 function dssim_gradient(
     imgs1, imgs2, divide_by_two_in_dssim = false
 )
     return dssim_gradient!(
-        nothing,                    # will be allocated and returned
+        nothing,  # will be allocated and returned
         imgs1, imgs2,
-        nothing, nothing, nothing,  # will be allocated and freed
+        nothing,  # will be allocated and freed
         divide_by_two_in_dssim
     )
 end
@@ -264,9 +263,9 @@ function ssim!(
     should_zero = true
 )
     return _ssim_fwd_bwd!(
-        ssims, nothing,             # (will not be allocated)
+        ssims, nothing,  # (will not be allocated)
         imgs1, imgs2,
-        nothing, nothing, nothing,  # (will not be allocated)
+        nothing,         # (will not be allocated)
         should_zero,
         Val(false), Val(true),
         false, false  # (not used)
@@ -297,9 +296,9 @@ function dssim!(
     divide_by_two_in_dssim = false
 )
     return _ssim_fwd_bwd!(
-        dssims, nothing,            # (will not be allocated)
+        dssims, nothing,  # (will not be allocated)
         imgs1, imgs2,
-        nothing, nothing, nothing,  # (will not be allocated)
+        nothing,          # (will not be allocated)
         should_zero,
         Val(false), Val(true),
         true, divide_by_two_in_dssim

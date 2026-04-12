@@ -1,6 +1,6 @@
 # FastCUDASSIM
 
-[![Build Status](https://github.com/LaurensDiels/FastCUDASSIM.jl/actions/workflows/CI.yml/badge.svg?branch=master)](https://github.com/LaurensDiels/FastCUDASSIM.jl/actions/workflows/CI.yml?query=branch%3Amaster)[![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://laurensdiels.github.io/FastCUDASSIM.jl/stable/)[![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://laurensdiels.github.io/FastCUDASSIM.jl/dev/)
+[![Build Status](https://github.com/LaurensDiels/FastCUDASSIM.jl/actions/workflows/CI.yml/badge.svg?branch=master)](https://github.com/LaurensDiels/FastCUDASSIM.jl/actions/workflows/CI.yml?query=branch%3Amaster) [![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://laurensdiels.github.io/FastCUDASSIM.jl/stable/) [![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://laurensdiels.github.io/FastCUDASSIM.jl/dev/)
 
 
 Fast computation of the [Structural Similarity Index Measure](https://en.wikipedia.org/wiki/Structural_similarity_index_measure) (SSIM) and its gradients on NVIDIA GPUs.
@@ -32,21 +32,21 @@ julia> gradients  # of the ssims w.r.t. the images in x
 ```
 
 ## Benchmark
-* SSIM for a single full HD RGB image pair:
+* SSIM for a single full HD image pair (1 | 3 channels):
 ```
-    * ImageQualityIndexes.jl (CPU):           638     ms
-    * SSIMLoss.jl (GPU, `crop = false`):       60.3   ms
-    * pytorch_msssim.py (GPU):                  8.35  ms
-    * fused_ssim.py:                            0.875 ms
-    * FastCUDASSIM.jl:                          0.988 ms
+    * ImageQualityIndexes.jl (CPU):           234     ms  |  546     ms
+    * SSIMLoss.jl (GPU, `crop = false`):       19.9   ms  |   58.1   ms
+    * pytorch_msssim.py (GPU):                  4.16  ms  |    8.27  ms
+    * fused_ssim.py:                            0.269 ms  |    0.891 ms
+    * FastCUDASSIM.jl:                          0.284 ms  |    0.831 ms
 ```
-* DSSIMs and gradients for a batch of 32 grayscale images of size 256 x 256:
+* DSSIMs and gradients for a batch of 32 images of size 256 x 256 (1 | 3 channels):
 ```
     * SSIMLoss.jl (Zygote):                     ERROR: Gradient Thunk(ChainRules.var"#...) should be a tuple
-    * pytorch_msssim.py (GPU):                  12.0   ms
-    * fused_ssim.py:                             0.765 ms
-    * FastCUDASSIM.jl (Zygote):                  1.10  ms
-    * FastCUDASSIM.jl (`dssim_with_gradient!`):  0.824 ms
+    * pytorch_msssim.py (GPU):                  11.9   ms  |  15.6   ms
+    * fused_ssim.py:                             0.732 ms  |   1.78  ms
+    * FastCUDASSIM.jl (Zygote):                  0.825 ms  |   2.17  ms
+    * FastCUDASSIM.jl (`dssim_with_gradient!`):  0.642 ms  |   1.74  ms
 ```
 on an Intel i7-7700K and NVIDIA RTX 3070. The tested implementations are:
 * [ImageQualityIndexes.jl](https://github.com/JuliaImages/ImageQualityIndexes.jl)

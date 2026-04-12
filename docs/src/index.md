@@ -1,6 +1,6 @@
 # FastCUDASSIM.jl
 
-Fast calculation of the Structural Similarity Index Measure (SSIM) and its gradients, on NVIDIA GPUs.
+Fast calculation of the [Structural Similarity Index Measure](https://en.wikipedia.org/wiki/Structural_similarity_index_measure) (SSIM) and its gradients, on NVIDIA GPUs.
 
 
 ## Quick start
@@ -12,7 +12,7 @@ julia> using CUDA, FastCUDASSIM
 
 julia> img1 = CUDA.rand(Float32, 3, 512, 768); img2 = similar(img1);
 
-julia> ssim(img1, img2)  # Actual value depends on RNG above
+julia> ssim(img1, img2)  # Actual value depends on the RNG above
 4.7802605f-6
 
 julia> ssim_gradient(img1, img2)  # w.r.t. img1
