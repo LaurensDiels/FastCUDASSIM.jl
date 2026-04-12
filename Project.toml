@@ -20,7 +20,7 @@ FastCUDASSIMChainRulesCoreExt = "ChainRulesCore"
 
 [compat]
 Accessors = "0.1.43"
-CUDA = "5.9.6"
+CUDA = "5.9.6, 6"
 ChainRulesCore = "1.26.0"
 GPUArrays = "11.4.1"
 ImageCore = "0.10.5"
