@@ -34,19 +34,19 @@ julia> gradients  # of the ssims w.r.t. the images in x
 ## Benchmark
 * SSIM for a single full HD image pair (1 | 3 channels):
 ```
-    * ImageQualityIndexes.jl (CPU):           234     ms  |  546     ms
-    * SSIMLoss.jl (GPU, `crop = false`):       19.9   ms  |   58.1   ms
-    * pytorch_msssim.py (GPU):                  4.16  ms  |    8.27  ms
-    * fused_ssim.py:                            0.269 ms  |    0.891 ms
-    * FastCUDASSIM.jl:                          0.284 ms  |    0.831 ms
+    * ImageQualityIndexes.jl (CPU):           242     ms  |  556     ms
+    * SSIMLoss.jl (GPU, `crop = false`):       19.8   ms  |   58.2   ms
+    * pytorch_msssim.py (GPU):                  4.41  ms  |    8.55  ms
+    * fused_ssim.py:                            0.265 ms  |    0.870 ms
+    * FastCUDASSIM.jl:                          0.271 ms  |    0.810 ms
 ```
 * DSSIMs and gradients for a batch of 32 images of size 256 x 256 (1 | 3 channels):
 ```
     * SSIMLoss.jl (Zygote):                     ERROR: Gradient Thunk(ChainRules.var"#...) should be a tuple
-    * pytorch_msssim.py (GPU):                  11.9   ms  |  15.6   ms
-    * fused_ssim.py:                             0.732 ms  |   1.78  ms
-    * FastCUDASSIM.jl (Zygote):                  0.825 ms  |   2.17  ms
-    * FastCUDASSIM.jl (`dssim_with_gradient!`):  0.642 ms  |   1.74  ms
+    * pytorch_msssim.py (GPU):                  12.6   ms  |  16.5   ms
+    * fused_ssim.py:                             0.722 ms  |   1.73  ms
+    * FastCUDASSIM.jl (Zygote):                  0.835 ms  |   2.17  ms
+    * FastCUDASSIM.jl (`dssim_with_gradient!`):  0.629 ms  |   1.70  ms
 ```
 on an Intel i7-7700K and NVIDIA RTX 3070. The tested implementations are:
 * [ImageQualityIndexes.jl](https://github.com/JuliaImages/ImageQualityIndexes.jl)

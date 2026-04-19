@@ -1,11 +1,13 @@
 # Contains the core methods for the computation of the (D)SSIM and its gradients,
 # but not in a particularly user-friendly form.
 
+const WARPSIZE = 32i32  # == warpsize()
 
 # Each image in an image batch is handled separately, reusing internal buffers (like shared
 # memory). We split each image into non-overlapping tiles. Each tile is handled by a single
 # block, but blocks might handle multiple (strided) tiles.
-const TILE_HEIGHT = 32i32
+const TILE_HEIGHT = 32i32  
+# ( == WARPSIZE for better memory coalescing )
 const TILE_WIDTH = 8i32
 # Obtained by testing many configurations on an RTX 3070.
 # Also fits comfortably into standard shared memory (48 KiB) for Float32 RGB images.
@@ -165,6 +167,8 @@ function _ssim_kernel_fwd!(
 
     thread_idx_in_block = threadIdx().x  # 1D index
     # blockDim().x == NB_THREADS
+    thread_idx_in_warp0 = (thread_idx_in_block - 1i32) & (WARPSIZE - 1i32)
+    # mod1(thread_idx_in_block, WARPSIZE), but more efficient and zero-indexed (i.e. mod)
 
     nb_tiles_v = cld(img_height, TILE_HEIGHT)
     nb_tiles_u = cld(img_width, TILE_WIDTH)
@@ -380,7 +384,8 @@ function _ssim_kernel_fwd!(
                             N_dssims_dQMP[global_v, 1, ch, global_u, batch_idx] = -s / t
                             N_dssims_dQMP[global_v, 2, ch, global_u, batch_idx] = 
                                 2 * zt_inv * ((y - x) * m_R + s * (z - t) * m) 
-                            N_dssims_dQMP[global_v, 3, ch, global_u, batch_idx] = 2 * x * zt_inv
+                            N_dssims_dQMP[global_v, 3, ch, global_u, batch_idx] = 
+                                2 * x * zt_inv
                         end 
                         
                     end  # inbounds check
@@ -407,23 +412,32 @@ function _ssim_kernel_fwd!(
         if !skip_ssim
             # We already reduced (via +) the ssim map values for all pixel components our
             # thread deals with. Now further reduce across threads.
-            block_ssim_sum = CUDA.reduce_block(+, thread_sum_ssim, Ts(0), Val(true))
-            # The total SSIM sum is the sum of these block sums.
-            # (Note that also threads outside of the image boundaries need to
-            # contribute to the reduction. Since thread_sum_ssim is initialized  at 0,
-            # this is not an issue.)
-            if thread_idx_in_block == 1
-                CUDA.@atomic N_ssims[batch_idx] += block_ssim_sum
-                # If at this point we divide by the number of pixels components per
-                # image, then e.g.
-                #   ssim(img1, img1) = 0.9999624f0 < 1f0
-                # for two full HD zero images, because of accumulating rounding
-                # errors. Therefore, we divide as late as possible: after the
-                # kernel.
+
+            # First reduce at the warp level via shuffling:
+            warp_ssim_sum = thread_sum_ssim
+            offset = 1i32
+            while offset < WARPSIZE
+                warp_ssim_sum += shfl_down_sync(0xffffffff, warp_ssim_sum, offset)
+                offset <<= 1
             end
-            # Slightly faster (due to clever compiler optimizations regarding
-            # atomics) than outputting block- or warp-level reduced SSIM maps and
-            # using sum afterwards. 
+            # (Note that also threads outside of the image boundaries need to
+            # contribute to the reduction. Since thread_sum_ssim is initialized at 0,
+            # this is not an issue.)
+
+            # The warp leaders now contain the sum of the values of all threads in the warp.
+            # Now globally reduce via atomics:
+            if thread_idx_in_warp0 == 0i32
+                CUDA.@atomic N_ssims[batch_idx] += warp_ssim_sum
+                # If at this point we divide by the number of pixels components per image,
+                # then e.g.
+                #   ssim(img1, img1) = 0.9999624f0 < 1f0
+                # for two full HD zero images, because of accumulating rounding errors. 
+                # Therefore, we divide as late as possible: after the kernel.
+            end
+            # Due to clever compiler optimizations regarding atomics slightly faster than
+            # performing block-level reduction and atomically reducing globally,
+            # and faster than outputting block- or warp-level reduced SSIM maps and
+            # using sum afterwards.    
         end
 
         batch_idx += 1i32
@@ -780,7 +794,7 @@ function _ssim_kernel_bwd!(
         end  #  tiles loop
 
         batch_idx += 1i32
-    end  # lbatch loop
+    end  # batch loop
 
     return
 end
