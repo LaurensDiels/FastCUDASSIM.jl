@@ -1014,7 +1014,7 @@ function _ssim_fwd_bwd!(
             Val(true),  # dynamic
             skip_ssim_val, skip_backward_val
         )
-        attributes(kernel.fun)[CUDA.CU_FUNC_ATTRIBUTE_MAX_DYNAMIC_SHARED_SIZE_BYTES] =
+        attributes(kernel.fun)[CUDA.FUNC_ATTRIBUTE_MAX_DYNAMIC_SHARED_SIZE_BYTES] =
             shmem_bytes
         kernel(N_ssims, 
             N_dssims_dQMP,
