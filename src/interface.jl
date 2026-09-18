@@ -51,7 +51,7 @@ end
         imgs1, imgs2,
         N_dssims_dQMP,
         should_zero = true,
-        divide_by_two_in_dssim = true
+        divide_by_two_in_dssim = false
     )
     -> (dssims, dL_dimgs1)
 
